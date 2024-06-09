@@ -15,18 +15,18 @@ def start_document_summarize(contents, ratio):
     :param contents: 要約する文章
     :param ratio: 要約率（%）
     """
-    
-    # 文章の正規化と文単位での分割
-    contents = str(''.join(contents))
-    # 氏名と時間を取り除くための正規表現パターン
-    pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
+
     # パターンに一致する部分を削除
     contents = re.sub(pattern, "", contents)
     # 不要な改行を削除
     contents = contents.replace('\n', ' ')
+    # 文章の正規化と文単位での分割
+    contents = ''.join(contents)
+    # 氏名と時間を取り除くための正規表現パターン
+    pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
     # 文章を文単位で分割
     text = re.findall("[^。]+。?", contents)
-    
+
     # Janomeの設定
     tokenizer = JanomeTokenizer('japanese')
     char_filters = [
