@@ -15,8 +15,9 @@ def start_document_summarize(contents, ratio):
     :param contents: 要約する文章
     :param ratio: 要約率（%）
     """
+    
     # 文章の正規化と文単位での分割
-    contents = ''.join(contents)
+    contents = str(''.join(contents))
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
     # パターンに一致する部分を削除
