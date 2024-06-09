@@ -18,8 +18,14 @@ def start_document_summarize(contents, ratio):
     # 文章の正規化と文単位での分割
     contents = ''.join(contents)
     contents = contents.strip()
-
     text = re.findall("[^。]+。?", contents.replace('\n', ''))
+
+    # 氏名と時間を取り除くための正規表現パターン
+    pattern = r"\[.*?\] \d{2}:\d{2}:\d{2}\n"
+    # パターンに一致する部分を削除
+    text = re.sub(pattern, "", text)
+    text = text.strip()
+
 
     # Janomeの設定
     tokenizer = JanomeTokenizer('japanese')
