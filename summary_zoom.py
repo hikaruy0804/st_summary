@@ -17,6 +17,7 @@ def start_document_summarize(contents, ratio):
     """
     # 不要な改行を削除
     contents = contents.replace('\n', ' ')
+    contents = contents.replace('\r', ' ')
     
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
