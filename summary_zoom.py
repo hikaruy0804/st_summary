@@ -17,7 +17,7 @@ def start_document_summarize(contents, ratio):
     """
     # 文章の正規化と文単位での分割の前に、型を確認し、必要な場合のみjoinを使用
     if isinstance(contents, list):
-    contents = ''.join(contents)
+        contents = ''.join(contents)
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2}\n"
     # パターンに一致する部分を削除
