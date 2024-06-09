@@ -80,7 +80,7 @@ elif select_box == "テキストファイル(.txt)":
     st.write('input: ', uploaded_file)
     if uploaded_file is not None:
         texts = uploaded_file.getvalue()
-         contents = texts.decode('utf-8')
+        contents = texts.decode('utf-8')
         # contents = texts.lower()
 
 # 「要約開始」ボタンが押された場合の処理
