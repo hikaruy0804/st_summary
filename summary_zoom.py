@@ -73,13 +73,13 @@ contents = ""
 
 # 直接入力またはファイルアップロードに応じてコンテンツを取得
 if select_box == "直接入力":
-    texts = st.text_area(label="入力欄", height=500)
+    contents = st.text_area(label="入力欄", height=500)
     # contents = texts.lower()
 elif select_box == "テキストファイル(.txt)":
     uploaded_file = st.file_uploader(label='Upload file:')
     st.write('input: ', uploaded_file)
     if uploaded_file is not None:
-        texts = uploaded_file.getvalue()
+        contents = uploaded_file.getvalue()
         # texts = texts.decode('utf-8')
         # contents = texts.lower()
 
