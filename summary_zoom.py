@@ -80,10 +80,10 @@ elif select_box == "テキストファイル(.txt)":
     if uploaded_file is not None:
         try:
             texts = uploaded_file.getvalue().decode('utf-8')
+            st.write("Decoded text: ", texts)  # デバッグ用にデコードしたテキストを表示
             contents = texts.lower()
         except UnicodeDecodeError:
             st.error("ファイルのデコードに失敗しました。utf-8形式のファイルをアップロードしてください。")
-
 
 # 「要約開始」ボタンが押された場合の処理
 if st.button("要約開始") and contents:
