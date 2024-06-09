@@ -17,14 +17,10 @@ def start_document_summarize(contents, ratio):
     """
     # 文章の正規化と文単位での分割
     contents = ''.join(contents)
-    # 氏名と時間を取り除くための正規表現パターン
-    pattern = r"\[.*?\] \d{2}:\d{2}:\d{2}\n"
-    # パターンに一致する部分を削除
-    contents  = re.sub(pattern, "", contents)
     contents = contents.strip()
 
     text = re.findall("[^。]+。?", contents.replace('\n', ''))
-    
+
     # Janomeの設定
     tokenizer = JanomeTokenizer('japanese')
     char_filters = [
@@ -39,21 +35,21 @@ def start_document_summarize(contents, ratio):
     
     # 文章のトークン化
     corpus = [' '.join(analyzer.analyze(sentence)) + u'。' for sentence in text]
-    
+
     # Sumyの設定
     parser = PlaintextParser.from_string(''.join(corpus), Tokenizer('japanese'))
     summarizer = LexRankSummarizer()
     summarizer.stop_words = [' ']
-    
+
     # 要約率をセンテンス数に変換
     lens = len(corpus)
     a = 100 / lens
     pers = ratio / a
     pers = math.ceil(pers)
-    
+
     # 要約の実行
     summary = summarizer(document=parser.document, sentences_count=int(pers))
-    
+
     # 要約結果の表示
     print(u'文書要約完了')
     for sentence in summary:
@@ -74,14 +70,14 @@ contents = ""
 # 直接入力またはファイルアップロードに応じてコンテンツを取得
 if select_box == "直接入力":
     texts = st.text_area(label="入力欄", height=500)
-    contents = texts.lower()
+    contents = texts
 elif select_box == "テキストファイル(.txt)":
     uploaded_file = st.file_uploader(label='Upload file:')
     st.write('input: ', uploaded_file)
     if uploaded_file is not None:
         texts = uploaded_file.getvalue()
         texts = texts.decode('utf-8')
-        contents = texts.lower()
+        contents = texts
 
 # 「要約開始」ボタンが押された場合の処理
 if st.button("要約開始") and contents:
