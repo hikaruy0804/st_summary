@@ -66,7 +66,7 @@ def start_document_summarize(contents, ratio):
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
 st.write("長文の議事録や資料の文章を要約できます。要約率を入力して「要約開始」ボタンを押してください。")
-st.write("+zoomの文字起こしフォーマット処理を加えています。")
+st.write("+zoomの文字起こしフォーマット処理を加えています。要約時に発言者と発言内容の整合性おかしくならないように削除します。")
 # 要約率の入力
 ratio = st.number_input(label="要約率 ex:30(%)", min_value=1, max_value=99, value=30, step=1)
 
