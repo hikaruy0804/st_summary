@@ -70,12 +70,14 @@ contents = ""
 # 直接入力またはファイルアップロードに応じてコンテンツを取得
 if select_box == "直接入力":
     texts = st.text_area(label="入力欄", height=500)
-elif select_box == "テキストファイル(..txt)":
+    contents = texts
+elif select_box == "テキストファイル(.txt)":
     uploaded_file = st.file_uploader(label='Upload file:')
+    st.write('input: ', uploaded_file)
     if uploaded_file is not None:
-        texts = uploaded_file.getvalue().decode('utf-8').replace('\r\n', '\n')
-        # テキストの前処理をここで適用
-        contents = re.sub(r"\[.*?\] \d{2}:\d{2}:\d{2}\n", "", texts)
+        texts = uploaded_file.getvalue()
+        texts = texts.decode('utf-8')
+        contents = texts
 
 # 「要約開始」ボタンが押された場合の処理
 if st.button("要約開始") and contents:
