@@ -64,3 +64,32 @@ def start_document_summarize(contents, ratio):
     print(u'文書要約完了')
     for sentence in summary:
         st.write(filtered_text[filtered_corpus.index(sentence.__str__())])
+
+# Webアプリケーションのインターフェース
+st.title("文章要約システム")
+st.write("長文の議事録や資料の文章を要約できます。要約率を入力して「要約開始」ボタンを押してください。")
+st.write("+zoomの文字起こしフォーマット処理を加えています。要約時に発言者と発言内容の整合性おかしくならないように削除します。")
+# 要約率の入力
+ratio = st.number_input(label="要約率 ex:30(%)", min_value=1, max_value=99, value=30, step=1)
+
+# 入力方法の選択
+select_box = st.selectbox("入力方法：", ["直接入力", "テキストファイル(.txt)"])
+
+contents = ""
+
+# 直接入力またはファイルアップロードに応じてコンテンツを取得
+if select_box == "直接入力":
+    texts = st.text_area(label="入力欄", height=500)
+    contents = texts.lower()
+elif select_box == "テキストファイル(.txt)":
+    uploaded_file = st.file_uploader(label='Upload file:')
+    if uploaded_file is not None:
+        try:
+            texts = uploaded_file.getvalue().decode('utf-8')
+            contents = texts.lower()
+        except UnicodeDecodeError:
+            st.error("ファイルのデコードに失敗しました。utf-8形式のファイルをアップロードしてください。")
+
+# 「要約開始」ボタンが押された場合の処理
+if st.button("要約開始") and contents:
+    start_document_summarize(contents, ratio)
