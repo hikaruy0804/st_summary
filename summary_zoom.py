@@ -43,20 +43,22 @@ def start_document_summarize(contents, ratio):
     stop_pos = POSStopFilter(['間投詞', '感動詞'])  # フィラーを定義し直す
     token_filters = [
         POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
-        stop_pos,  # 間投詞やフィラーを除外
-        ExtractAttributeFilter('base_form')  # フィルタ適用後にbase_formを抽出
+        stop_pos  # 間投詞やフィラーを除外
     ]
     
     analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
     
-    # デバッグ: 品詞情報を確認
+    # デバッグ: 品詞情報を確認 (ExtractAttributeFilter を適用する前に)
     for sentence in text:
         tokens = analyzer.analyze(sentence)
         for token in tokens:
             # Token の品詞情報を確認
             st.write(f"Token: {token.surface}, POS: {token.part_of_speech.split(',')[0]}")  # 品詞情報を出力
     
-    # 文章のトークン化
+    # 文章のトークン化（ExtractAttributeFilter の適用）
+    token_filters.append(ExtractAttributeFilter('base_form'))
+    analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
+    
     corpus = [' '.join(analyzer.analyze(sentence)) + u'。' for sentence in text]
     
     # corpusが空の場合は処理を中止
