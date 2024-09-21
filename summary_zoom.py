@@ -40,7 +40,7 @@ def start_document_summarize(contents, ratio):
     ]
     
     # 間投詞やフィラーを除外するフィルター
-    stop_pos = POSStopFilter(['間投詞', 'フィラー'])
+    stop_pos = POSStopFilter(['間投詞', '感動詞'])  # フィラーを定義し直す
     token_filters = [
         POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
         ExtractAttributeFilter('base_form'),
@@ -48,6 +48,12 @@ def start_document_summarize(contents, ratio):
     ]
     
     analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
+    
+    # デバッグ: 品詞情報を確認
+    for sentence in text:
+        tokens = analyzer.analyze(sentence)
+        for token in tokens:
+            st.write(f"Token: {token.surface}, POS: {token.part_of_speech}")  # 品詞情報を出力
     
     # 文章のトークン化
     corpus = [' '.join(analyzer.analyze(sentence)) + u'。' for sentence in text]
