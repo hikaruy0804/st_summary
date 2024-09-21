@@ -1,6 +1,7 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import streamlit as st
+import re
 
 def filter_sentences_by_tfidf(corpus, original_sentences, threshold=0.1):
     # TF-IDFベクトライザーの初期化
