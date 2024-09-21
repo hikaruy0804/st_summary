@@ -60,8 +60,8 @@ def start_document_summarize(contents, ratio):
     stop_pos = POSStopFilter(['間投詞', 'フィラー'])
     token_filters = [
         POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
-        ExtractAttributeFilter('base_form'),
-        stop_pos  # 間投詞やフィラーを除外
+        stop_pos,  # 間投詞やフィラーを除外
+        ExtractAttributeFilter('base_form')  # 最後に適用
     ]
     analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
     
@@ -69,7 +69,7 @@ def start_document_summarize(contents, ratio):
     corpus = []
     for sentence in text:
         tokens = analyzer.analyze(sentence)
-        filtered_tokens = ' '.join([token.surface for token in tokens if hasattr(token, 'part_of_speech')])
+        filtered_tokens = ' '.join(tokens)  # tokensは既に文字列のリスト
         corpus.append(filtered_tokens + u'。')
 
     # TF-IDFで重要度が低いフレーズを削除
@@ -92,7 +92,7 @@ def start_document_summarize(contents, ratio):
     # 要約結果の表示
     print(u'文書要約完了')
     for sentence in summary:
-        st.write(text[corpus.index(sentence.__str__())])
+        st.write(sentence)
 
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
