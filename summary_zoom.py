@@ -2,6 +2,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import streamlit as st
 import re
+import math
+from janome.analyzer import Analyzer
+from janome.charfilter import UnicodeNormalizeCharFilter, RegexReplaceCharFilter
+from janome.tokenizer import Tokenizer as JanomeTokenizer
+from janome.tokenfilter import POSKeepFilter, ExtractAttributeFilter
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lex_rank import LexRankSummarizer
 
 def filter_sentences_by_tfidf(corpus, original_sentences, threshold=0.1):
     # TF-IDFベクトライザーの初期化
