@@ -53,7 +53,8 @@ def start_document_summarize(contents, ratio):
     for sentence in text:
         tokens = analyzer.analyze(sentence)
         for token in tokens:
-            st.write(f"Token: {token.surface}, POS: {token.part_of_speech}")  # 品詞情報を出力
+            # Token の品詞情報を確認
+            st.write(f"Token: {token.surface}, POS: {token.part_of_speech.split(',')[0]}")  # 品詞情報を出力
     
     # 文章のトークン化
     corpus = [' '.join(analyzer.analyze(sentence)) + u'。' for sentence in text]
