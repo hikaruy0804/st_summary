@@ -66,8 +66,12 @@ def start_document_summarize(contents, ratio):
     analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
     
     # 文章のトークン化
-    corpus = [' '.join(analyzer.analyze(sentence)) + u'。' for sentence in text]
-    
+    corpus = []
+    for sentence in text:
+        tokens = analyzer.analyze(sentence)
+        filtered_tokens = ' '.join([token.surface for token in tokens if hasattr(token, 'part_of_speech')])
+        corpus.append(filtered_tokens + u'。')
+
     # TF-IDFで重要度が低いフレーズを削除
     corpus_filtered = remove_low_tfidf_phrases(corpus, threshold=0.1)
     
