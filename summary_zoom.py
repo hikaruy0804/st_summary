@@ -10,26 +10,6 @@ from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-def remove_low_tfidf_phrases(sentences, threshold=0.1):
-    """
-    TF-IDFを使用して重要度が低いフレーズを削除
-    :param sentences: 文章（文ごとにリスト化されたもの）
-    :param threshold: TF-IDFのしきい値
-    """
-    vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(sentences)
-    features = vectorizer.get_feature_names_out()
-    tfidf_scores = X.toarray()
-    
-    important_sentences = []
-    for i, sentence in enumerate(sentences):
-        # TF-IDFスコアの平均を算出し、しきい値を下回る場合は無視する
-        avg_score = tfidf_scores[i].mean()
-        if avg_score > threshold:
-            important_sentences.append(sentence)
-    
-    return important_sentences
-
 def start_document_summarize(contents, ratio):
     """
     文章を要約する関数
@@ -45,22 +25,17 @@ def start_document_summarize(contents, ratio):
     # パターンに一致する部分を削除
     contents = re.sub(pattern, "", contents)
 
-    # 文章の正規化と文単位での分割
-    contents = ''.join(contents)
     # 文章を文単位で分割
     text = re.findall("[^。]+。?", contents)
 
     # Janomeの設定
-    tokenizer = JanomeTokenizer('japanese')
+    tokenizer = JanomeTokenizer()
     char_filters = [
         UnicodeNormalizeCharFilter(),
         RegexReplaceCharFilter(r'[()「」、。]', ' ')
     ]
-    # 間投詞やフィラーを除外するフィルター
-    stop_pos = POSStopFilter(['間投詞', 'フィラー'])
     token_filters = [
         POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
-        stop_pos,  # 間投詞やフィラーを除外
         ExtractAttributeFilter('base_form')  # 最後に適用
     ]
     analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
@@ -70,10 +45,27 @@ def start_document_summarize(contents, ratio):
     for sentence in text:
         tokens = analyzer.analyze(sentence)
         filtered_tokens = ' '.join(tokens)  # tokensは既に文字列のリスト
-        corpus.append(filtered_tokens + u'。')
+        if filtered_tokens.strip() != '':
+            corpus.append(filtered_tokens + u'。')
+
+    # corpusの長さを確認
+    print(f'corpusの文数: {len(corpus)}')
+
+    # corpusが空の場合、処理を中断
+    if len(corpus) == 0:
+        st.error("有効な文がありません。入力内容やフィルター設定を確認してください。")
+        return
 
     # TF-IDFで重要度が低いフレーズを削除
-    corpus_filtered = remove_low_tfidf_phrases(corpus, threshold=0.1)
+    corpus_filtered = remove_low_tfidf_phrases(corpus, threshold=0.0)
+
+    # corpus_filteredの長さを確認
+    print(f'corpus_filteredの文数: {len(corpus_filtered)}')
+
+    # corpus_filteredが空の場合、処理を中断
+    if len(corpus_filtered) == 0:
+        st.error("要約に使用できる文がありません。しきい値や入力内容を見直してください。")
+        return
     
     # Sumyの設定
     parser = PlaintextParser.from_string(''.join(corpus_filtered), Tokenizer('japanese'))
@@ -84,8 +76,8 @@ def start_document_summarize(contents, ratio):
     lens = len(corpus_filtered)
     a = 100 / lens
     pers = ratio / a
-    pers = math.ceil(pers)
-    
+    pers = max(1, math.ceil(pers))  # 最低でも1文は要約する
+
     # 要約の実行
     summary = summarizer(document=parser.document, sentences_count=int(pers))
     
@@ -93,6 +85,7 @@ def start_document_summarize(contents, ratio):
     print(u'文書要約完了')
     for sentence in summary:
         st.write(sentence)
+
 
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
