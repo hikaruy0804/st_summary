@@ -4,7 +4,7 @@ import math
 from janome.analyzer import Analyzer
 from janome.charfilter import UnicodeNormalizeCharFilter, RegexReplaceCharFilter
 from janome.tokenizer import Tokenizer as JanomeTokenizer
-from janome.tokenfilter import POSKeepFilter, ExtractAttributeFilter, POSStopFilter
+from janome.tokenfilter import POSKeepFilter, ExtractAttributeFilter
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
@@ -35,12 +35,9 @@ def start_document_summarize(contents, ratio):
         UnicodeNormalizeCharFilter(),
         RegexReplaceCharFilter(r'[()「」、。]', ' ')
     ]
-    # 間投詞やフィラーを除外するフィルター
-    stop_pos = POSStopFilter(['間投詞', 'フィラー'])
     token_filters = [
         POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
-        ExtractAttributeFilter('base_form'),
-        stop_pos  # 間投詞やフィラーを除外
+        ExtractAttributeFilter('base_form')
     ]
     analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
     
