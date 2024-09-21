@@ -9,23 +9,6 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 
-# 不要なフレーズを事前に除外するためのリスト
-# ここには「あいづち」や意味のないフレーズを追加
-exclude_phrases = [
-    r"お願いします", r"なんか", r"とか", r"ま", r"かな", r"確かに", r"ですけどね", r"ですかね", r"と思います", r"申請してない",
-    r"見やすいかどうか", r"ただ", r"というのも"
-]
-
-def remove_exclude_phrases(text):
-    """
-    不要なフレーズを削除する関数
-    :param text: 元のテキスト
-    :return: フレーズ削除後のテキスト
-    """
-    for phrase in exclude_phrases:
-        text = re.sub(phrase, '', text)
-    return text
-
 def start_document_summarize(contents, ratio):
     """
     文章を要約する関数
@@ -33,19 +16,19 @@ def start_document_summarize(contents, ratio):
     :param ratio: 要約率（%）
     """
     # 不要な改行を削除
-    contents = contents.replace('\n', ' ').replace('\r', ' ')
+    contents = contents.replace('\n', ' ')
+    contents = contents.replace('\r', ' ')
     
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
+    # パターンに一致する部分を削除
     contents = re.sub(pattern, "", contents)
-    
-    # 不要なフレーズを削除
-    contents = remove_exclude_phrases(contents)
-    
+
     # 文章の正規化と文単位での分割
     contents = ''.join(contents)
+    # 文章を文単位で分割
     text = re.findall("[^。]+。?", contents)
-    
+
     # Janomeの設定
     tokenizer = JanomeTokenizer('japanese')
     char_filters = [
@@ -83,11 +66,16 @@ def start_document_summarize(contents, ratio):
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
 st.write("長文の議事録や資料の文章を要約できます。要約率を入力して「要約開始」ボタンを押してください。")
+st.write("+zoomの文字起こしフォーマット処理を加えています。要約時に発言者と発言内容の整合性おかしくならないように削除します。")
+# 要約率の入力
 ratio = st.number_input(label="要約率 ex:30(%)", min_value=1, max_value=99, value=30, step=1)
+
+# 入力方法の選択
 select_box = st.selectbox("入力方法：", ["直接入力", "テキストファイル(.txt)"])
 
 contents = ""
 
+# 直接入力またはファイルアップロードに応じてコンテンツを取得
 if select_box == "直接入力":
     texts = st.text_area(label="入力欄", height=500)
     contents = texts.lower()
@@ -100,5 +88,6 @@ elif select_box == "テキストファイル(.txt)":
         except UnicodeDecodeError:
             st.error("ファイルのデコードに失敗しました。utf-8形式のファイルをアップロードしてください。")
 
+# 「要約開始」ボタンが押された場合の処理
 if st.button("要約開始") and contents:
     start_document_summarize(contents, ratio)
