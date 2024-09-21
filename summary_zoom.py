@@ -1,37 +1,13 @@
 import streamlit as st
 import re
 import math
+from janome.analyzer import Analyzer
+from janome.charfilter import UnicodeNormalizeCharFilter, RegexReplaceCharFilter
 from janome.tokenizer import Tokenizer as JanomeTokenizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from janome.tokenfilter import POSKeepFilter, ExtractAttributeFilter, POSStopFilter
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
-
-def remove_low_importance_sentences(text, threshold=0.1):
-    """
-    低重要度の文をTF-IDFを使って取り除く関数
-    :param text: 元のテキスト
-    :param threshold: 重要度の閾値（これより低い文を取り除く）
-    """
-    # 文単位で分割
-    sentences = re.findall("[^。]+。?", text)
-    
-    # Janomeでトークン化
-    tokenizer = JanomeTokenizer()
-    tokenized_sentences = [' '.join([token.surface for token in tokenizer.tokenize(sentence)]) for sentence in sentences]
-
-    # TF-IDFベクトライザを使用して文の重要度を計算
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(tokenized_sentences)
-    
-    # 各文の重要度（平均TF-IDFスコア）を計算
-    sentence_scores = tfidf_matrix.mean(axis=1)
-    
-    # スコアがthresholdよりも高い文のみを残す
-    filtered_sentences = [sentences[i] for i in range(len(sentences)) if sentence_scores[i, 0] > threshold]
-    
-    # フィルタリングされた文を連結して戻す
-    return ''.join(filtered_sentences)
 
 def start_document_summarize(contents, ratio):
     """
@@ -45,18 +21,52 @@ def start_document_summarize(contents, ratio):
     
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
+    # パターンに一致する部分を削除
     contents = re.sub(pattern, "", contents)
 
-    # 文単位での分割と冗長な文の削除
-    contents = remove_low_importance_sentences(contents)
+    # 文章の正規化と文単位での分割
+    contents = ''.join(contents)
+    text = re.findall("[^。]+。?", contents)
+    
+    if len(text) == 0:
+        st.error("要約する文章がありません。")
+        return  # テキストが空の場合は処理を終了
 
+    # Janomeの設定
+    tokenizer = JanomeTokenizer('japanese')
+    char_filters = [
+        UnicodeNormalizeCharFilter(),
+        RegexReplaceCharFilter(r'[()「」、。]', ' ')
+    ]
+    
+    # 間投詞やフィラーを除外するフィルター
+    stop_pos = POSStopFilter(['間投詞', 'フィラー'])
+    token_filters = [
+        POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
+        ExtractAttributeFilter('base_form'),
+        stop_pos  # 間投詞やフィラーを除外
+    ]
+    
+    analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
+    
+    # 文章のトークン化
+    corpus = [' '.join(analyzer.analyze(sentence)) + u'。' for sentence in text]
+    
+    # corpusが空の場合は処理を中止
+    if len(corpus) == 0:
+        st.error("トークン化された文章がありません。")
+        return
+    
     # Sumyの設定
-    parser = PlaintextParser.from_string(contents, Tokenizer('japanese'))
+    parser = PlaintextParser.from_string(''.join(corpus), Tokenizer('japanese'))
     summarizer = LexRankSummarizer()
     summarizer.stop_words = [' ']
     
     # 要約率をセンテンス数に変換
-    lens = len(contents)
+    lens = len(corpus)
+    if lens == 0:
+        st.error("文の長さが0です。")
+        return
     a = 100 / lens
     pers = ratio / a
     pers = math.ceil(pers)
@@ -67,7 +77,7 @@ def start_document_summarize(contents, ratio):
     # 要約結果の表示
     print(u'文書要約完了')
     for sentence in summary:
-        st.write(sentence.__str__())
+        st.write(text[corpus.index(sentence.__str__())])
 
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
