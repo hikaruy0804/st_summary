@@ -11,7 +11,7 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 
-def filter_sentences_by_tfidf(corpus, original_sentences, threshold=0.1):
+def filter_sentences_by_tfidf(corpus, original_sentences, threshold=0.01):
     # TF-IDFベクトライザーの初期化
     vectorizer = TfidfVectorizer()
     # コーパスからTF-IDF行列を作成
@@ -22,7 +22,8 @@ def filter_sentences_by_tfidf(corpus, original_sentences, threshold=0.1):
     filtered_sentences = []
     filtered_corpus = []
     for i in range(len(corpus)):
-        if mean_tfidf_scores[i, 0] >= threshold:
+        score = mean_tfidf_scores[i, 0]
+        if score >= threshold:
             filtered_sentences.append(original_sentences[i])
             filtered_corpus.append(corpus[i])
     return filtered_sentences, filtered_corpus
@@ -54,7 +55,13 @@ def start_document_summarize(contents, ratio):
     corpus = [' '.join(analyzer.analyze(sentence)) for sentence in text]
     
     # TF-IDFによる文のフィルタリング
-    filtered_text, filtered_corpus = filter_sentences_by_tfidf(corpus, text, threshold=0.1)
+    filtered_text, filtered_corpus = filter_sentences_by_tfidf(corpus, text, threshold=0.01)
+    
+    # フィルタリング後の文数を確認
+    lens = len(filtered_corpus)
+    if lens == 0:
+        st.error("フィルタリングの結果、要約に使用できる文がありませんでした。閾値を下げてみてください。")
+        return
     
     # Sumyの設定
     parser = PlaintextParser.from_string(' '.join(filtered_corpus), Tokenizer('japanese'))
@@ -62,18 +69,21 @@ def start_document_summarize(contents, ratio):
     summarizer.stop_words = [' ']
     
     # 要約率をセンテンス数に変換
-    lens = len(filtered_corpus)
     a = 100 / lens
     pers = ratio / a
     pers = math.ceil(pers)
+    
+    # 要約文の数が総文数を超えないように調整
+    pers = min(pers, lens)
     
     # 要約の実行
     summary = summarizer(document=parser.document, sentences_count=int(pers))
     
     # 要約結果の表示
-    print(u'文書要約完了')
+    st.write(u'文書要約完了')
     for sentence in summary:
         st.write(filtered_text[filtered_corpus.index(sentence.__str__())])
+
 
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
