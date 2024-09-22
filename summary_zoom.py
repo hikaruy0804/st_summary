@@ -9,19 +9,6 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 
-# フィラー、曖昧な表現や不要な言葉リスト
-filler_words = ['えーと', 'あの', 'うん', 'そうですね', 'まあ', 'なんか', 'お願いします', 'とは思います', 'ちょっと', 'まぁ', 'いいや', 'それ', 'あれ', 'ですね', 'ですかね', 'とか', 'ですね', 'ですし', 'し。','してますね。','あ、']
-
-def remove_filler_words(text):
-    """
-    フィラーやあいづち、曖昧な表現を削除する関数
-    :param text: 入力文章
-    :return: フィラーや曖昧な表現を削除した文章
-    """
-    for word in filler_words:
-        text = text.replace(word, '')
-    return text
-
 def start_document_summarize(contents, ratio):
     """
     文章を要約する関数
@@ -29,15 +16,16 @@ def start_document_summarize(contents, ratio):
     :param ratio: 要約率（%）
     """
     # 不要な改行を削除
-    contents = contents.replace('\n', ' ').replace('\r', ' ')
+    contents = contents.replace('\n', ' ')
+    contents = contents.replace('\r', ' ')
     
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
+    # パターンに一致する部分を削除
     contents = re.sub(pattern, "", contents)
 
-    # フィラーや曖昧な表現の削除
-    contents = remove_filler_words(contents)
-
+    # 文章の正規化と文単位での分割
+    contents = ''.join(contents)
     # 文章を文単位で分割
     text = re.findall("[^。]+。?", contents)
 
@@ -47,7 +35,6 @@ def start_document_summarize(contents, ratio):
         UnicodeNormalizeCharFilter(),
         RegexReplaceCharFilter(r'[()「」、。]', ' ')
     ]
-    # 名詞や動詞などに限定しつつ、一般的で曖昧な動詞を削除するフィルター
     token_filters = [
         POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
         ExtractAttributeFilter('base_form')
@@ -72,7 +59,7 @@ def start_document_summarize(contents, ratio):
     summary = summarizer(document=parser.document, sentences_count=int(pers))
     
     # 要約結果の表示
-    st.write(u'文書要約完了')
+    print(u'文書要約完了')
     for sentence in summary:
         st.write(text[corpus.index(sentence.__str__())])
 
