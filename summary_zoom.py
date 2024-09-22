@@ -10,7 +10,7 @@ from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 
 # フィラー、曖昧な表現や不要な言葉リスト
-filler_words = ['えーと', 'あの', 'うん', 'そうですね', 'まあ', 'なんか', 'お願いします', 'とは思います', 'ちょっと', 'まぁ', 'いいや', 'それ', 'あれ', 'ですね', 'ですかね', 'とか', 'ですね', 'ですし', 'し。']
+filler_words = ['えーと', 'あの', 'うん', 'そうですね', 'まあ', 'なんか', 'お願いします', 'とは思います', 'ちょっと', 'まぁ', 'いいや', 'それ', 'あれ', 'ですね', 'ですかね', 'とか', 'ですね', 'ですし', 'し。','してますね。','あ、']
 
 def remove_filler_words(text):
     """
