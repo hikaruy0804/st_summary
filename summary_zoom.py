@@ -8,6 +8,7 @@ from janome.tokenfilter import POSKeepFilter, ExtractAttributeFilter
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 def start_document_summarize(contents, ratio):
     """
@@ -21,11 +22,8 @@ def start_document_summarize(contents, ratio):
     
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
-    # パターンに一致する部分を削除
     contents = re.sub(pattern, "", contents)
 
-    # 文章の正規化と文単位での分割
-    contents = ''.join(contents)
     # 文章を文単位で分割
     text = re.findall("[^。]+。?", contents)
 
@@ -36,7 +34,7 @@ def start_document_summarize(contents, ratio):
         RegexReplaceCharFilter(r'[()「」、。]', ' ')
     ]
     token_filters = [
-        POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
+        POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),  # ここで相槌や冗長な品詞を除去
         ExtractAttributeFilter('base_form')
     ]
     analyzer = Analyzer(char_filters=char_filters, tokenizer=tokenizer, token_filters=token_filters)
@@ -47,7 +45,6 @@ def start_document_summarize(contents, ratio):
     # Sumyの設定
     parser = PlaintextParser.from_string(''.join(corpus), Tokenizer('japanese'))
     summarizer = LexRankSummarizer()
-    summarizer.stop_words = [' ']
     
     # 要約率をセンテンス数に変換
     lens = len(corpus)
@@ -57,11 +54,30 @@ def start_document_summarize(contents, ratio):
     
     # 要約の実行
     summary = summarizer(document=parser.document, sentences_count=int(pers))
+
+    # 要約後の文をリスト化
+    summarized_corpus = [sentence.__str__() for sentence in summary]
+    
+    # 冗長な単語をTF-IDFで削除
+    important_summary = remove_redundant_words(summarized_corpus)
     
     # 要約結果の表示
-    print(u'文書要約完了')
-    for sentence in summary:
-        st.write(text[corpus.index(sentence.__str__())])
+    st.write(u'文書要約完了')
+    for sentence in important_summary:
+        st.write(sentence)
+
+def remove_redundant_words(corpus):
+    vectorizer = TfidfVectorizer(use_idf=True)
+    X = vectorizer.fit_transform(corpus)
+    
+    terms = vectorizer.get_feature_names_out()
+    important_terms = []
+    
+    for doc_idx in range(X.shape[0]):
+        sorted_terms = sorted(zip(terms, X[doc_idx].toarray()[0]), key=lambda x: x[1], reverse=True)
+        important_terms.append(" ".join([term for term, score in sorted_terms if score > 0.1]))  # スコアが一定以上の単語のみ
+
+    return important_terms
 
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
