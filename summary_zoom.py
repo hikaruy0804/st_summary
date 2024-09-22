@@ -10,6 +10,9 @@ from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+
 def start_document_summarize(contents, ratio):
     """
     文章を要約する関数
@@ -58,26 +61,36 @@ def start_document_summarize(contents, ratio):
     # 要約後の文をリスト化
     summarized_corpus = [sentence.__str__() for sentence in summary]
     
-    # 冗長な単語をTF-IDFで削除
-    important_summary = remove_redundant_words(summarized_corpus)
+    # 冗長な単語をTF-IDFで削除せず、重要度に基づいて文全体を保持
+    important_summary = get_important_sentences(summarized_corpus)
     
     # 要約結果の表示
     st.write(u'文書要約完了')
     for sentence in important_summary:
         st.write(sentence)
 
-def remove_redundant_words(corpus):
-    vectorizer = TfidfVectorizer(use_idf=True)
+def get_important_sentences(corpus):
+    """
+    文全体の重要度を計算し、重要な文を抽出する
+    :param corpus: 要約後の文のリスト
+    :return: 重要な文のみのリスト
+    """
+    # TF-IDFの設定
+    vectorizer = TfidfVectorizer()
     X = vectorizer.fit_transform(corpus)
     
-    terms = vectorizer.get_feature_names_out()
-    important_terms = []
-    
-    for doc_idx in range(X.shape[0]):
-        sorted_terms = sorted(zip(terms, X[doc_idx].toarray()[0]), key=lambda x: x[1], reverse=True)
-        important_terms.append(" ".join([term for term, score in sorted_terms if score > 0.1]))  # スコアが一定以上の単語のみ
+    # 各文の重要度をスコア化（TF-IDFスコアの平均値を文の重要度とする）
+    sentence_scores = np.mean(X.toarray(), axis=1)
 
-    return important_terms
+    # 重要度が高い文を上位から抽出
+    num_sentences_to_keep = max(1, int(len(corpus) * 0.3))  # 上位30%の重要な文を残す
+    important_sentence_indices = np.argsort(sentence_scores)[-num_sentences_to_keep:]
+    
+    # 重要な文を元の順序に戻してリスト化
+    important_sentences = [corpus[i] for i in sorted(important_sentence_indices)]
+    
+    return important_sentences
+
 
 # Webアプリケーションのインターフェース
 st.title("文章要約システム")
