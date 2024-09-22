@@ -9,14 +9,14 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 
-# フィラーや相槌など、削除したい単語リスト
-filler_words = ['えーと', 'あの', 'うん', 'そうですね', 'まあ', 'なんか', 'お願いします', 'とは思います']
+# フィラー、曖昧な表現や不要な言葉リスト
+filler_words = ['えーと', 'あの', 'うん', 'そうですね', 'まあ', 'なんか', 'お願いします', 'とは思います', 'ちょっと', 'まぁ', 'いいや', 'それ', 'あれ', 'ですね', 'ですかね', 'とか', 'ですね', 'ですし']
 
 def remove_filler_words(text):
     """
-    フィラーやあいづちを削除する関数
+    フィラーやあいづち、曖昧な表現を削除する関数
     :param text: 入力文章
-    :return: フィラーを削除した文章
+    :return: フィラーや曖昧な表現を削除した文章
     """
     for word in filler_words:
         text = text.replace(word, '')
@@ -34,8 +34,8 @@ def start_document_summarize(contents, ratio):
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
     contents = re.sub(pattern, "", contents)
-    
-    # フィラーや相槌の削除
+
+    # フィラーや曖昧な表現の削除
     contents = remove_filler_words(contents)
 
     # 文章を文単位で分割
@@ -47,6 +47,7 @@ def start_document_summarize(contents, ratio):
         UnicodeNormalizeCharFilter(),
         RegexReplaceCharFilter(r'[()「」、。]', ' ')
     ]
+    # 名詞や動詞などに限定しつつ、一般的で曖昧な動詞を削除するフィルター
     token_filters = [
         POSKeepFilter(['名詞', '形容詞', '副詞', '動詞']),
         ExtractAttributeFilter('base_form')
