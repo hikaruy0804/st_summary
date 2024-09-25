@@ -15,17 +15,30 @@ def start_document_summarize(contents, ratio):
     :param contents: 要約する文章
     :param ratio: 要約率（%）
     """
+    # フィラーリスト
+    fillers = [
+        "えー", "あー", "うーん", "そうですね", "えっと", "あのー", "なんか", 
+        "そのー", "まあ", "うーんと", "ええ", "ほら", "やっぱり", "んー", 
+        "ふーん", "そうそう", "んーと", "はい", "うん", "あ、そうか",
+    ]
+
     # 不要な改行を削除
-    contents = contents.replace('\n', ' ')
-    contents = contents.replace('\r', ' ')
-    
+    contents = contents.replace('\n', ' ').replace('\r', ' ')
+
     # 氏名と時間を取り除くための正規表現パターン
     pattern = r"\[.*?\] \d{2}:\d{2}:\d{2} "
-    # パターンに一致する部分を削除
     contents = re.sub(pattern, "", contents)
+
+    # フィラーを取り除くための正規表現パターン
+    # 各フィラーを正規表現のor条件で結合
+    filler_pattern = '|'.join([re.escape(filler) for filler in fillers])
+
+    # フィラーを削除
+    contents = re.sub(filler_pattern, "", contents)
 
     # 文章の正規化と文単位での分割
     contents = ''.join(contents)
+
     # 文章を文単位で分割
     text = re.findall("[^。]+。?", contents)
 
