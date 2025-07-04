@@ -3,4 +3,4 @@ streamlit==1.14.1
 sumy==0.11.0
 tinysegmenter
 scikit-learn
-
+altair==4.2.2
