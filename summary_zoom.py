@@ -9,6 +9,7 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lex_rank import LexRankSummarizer
 
+
 def start_document_summarize(contents, ratio):
     """
     文章を要約する関数
